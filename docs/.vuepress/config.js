@@ -192,7 +192,7 @@ module.exports = {
           ])
         },
         {
-          title: "Fixtures",
+          title: "Fixtures (Dependency injection)",
           collapsable: false,
           children: listDir("guides/fixtures", [
             "",
