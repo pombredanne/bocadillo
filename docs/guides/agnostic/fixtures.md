@@ -449,3 +449,32 @@ async def index(req, res, db: Database):
     # This query is being executed within a transaction. ✨
     res.media = await db.fetch_all(notes.select())
 ```
+
+## Wrapping up: a better Redis cache
+
+Let's go back to the Redis cache example we exposed in the [problem statement](#problem-statement), and use what we've learnt to improve it by using fixtures.
+
+```python
+import aioredis
+from bocadillo import App, Templates
+
+app = App()
+templates = Templates()
+
+@app.fixture
+async def redis():
+    redis = await aioredis.create_redis("redis://localhost")
+    yield redis
+    await redis.wait_closed()
+
+@app.route("/")
+async def index(req, res, redis):
+    page = await redis.get("index-page")
+    if page is None:
+        page = await templates.render("index.html")
+        await redis.set("index-page", page)
+    res.text = page
+
+if __name__ == "__main__":
+    app.run()
+```
