@@ -188,8 +188,22 @@ module.exports = {
             "asgi-middleware",
             "templates",
             "recipes",
-            "events",
-            "fixtures"
+            "events"
+          ])
+        },
+        {
+          title: "Fixtures",
+          collapsable: false,
+          children: listDir("guides/fixtures", [
+            "",
+            "problem",
+            "basics",
+            "scopes",
+            "async",
+            "cleanup",
+            "modularity",
+            "factory",
+            "auto"
           ])
         }
       ],
