@@ -19,11 +19,9 @@ from bocadillo import App, fixture
 from myapp.tables import notes  # imaginary
 
 @fixture(scope="app")
-async def db(app) -> Database:
-    db = Database("sqlite://:memory:")
-    app.on("startup", db.connect)
-    app.on("shutdown", db.disconnect)
-    return db
+async def db() -> Database:
+    with Database("sqlite://:memory:") as db:
+        yield db
 
 @fixture(autouse=True)
 async def transaction(db: Database):
