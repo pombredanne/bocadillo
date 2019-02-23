@@ -4,7 +4,7 @@
 
 Registering a fixture can be done by decorating a function with the `@bocadillo.fixture` decorator.
 
-Here's a hello world fixture:
+Here's a simple hello world fixture:
 
 ```python
 from bocadillo import fixture
@@ -16,7 +16,7 @@ def hello() -> str:
 
 ## Using a fixture
 
-Once the fixture has been defined, it can be used in views by declaring it as a parameter of the view.
+Once the fixture has been defined, it can be used in views by declaring it as a parameter.
 
 HTTP example:
 

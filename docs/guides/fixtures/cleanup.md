@@ -12,12 +12,15 @@ As an example, here's a fixture that provides a log file:
 
 ```python
 from datetime import datetime
+from bocadillo import App, fixture
 
-@app.fixture
+@fixture
 def log():
     logfile = open("/var/requests.log", "w+")
     yield logfile
     logfile.close()
+
+app = App()
 
 @app.route("/")
 async def index(req, res, log):
@@ -32,7 +35,7 @@ Teardown code will be executed even if an exception occurs within the view. You 
 Yield fixtures also play nicely with `with` statements:
 
 ```python
-@app.fixture
+@fixture
 def log():
     with open("/var/requests.log", "w+") as logfile:
         yield logfile

@@ -15,14 +15,16 @@ A good candidate for a factory fixture would be a parametrized database query. F
 The following example simulates that with a hardcoded, in-memory database of sticky notes:
 
 ```python
-@app.fixture(scope="app")
+from bocadillo import App, fixture
+
+@fixture(scope="app")
 def notes():
     return [
         {"id": 1, "text": "Groceries"},
         {"id": 2, "text": "Make potatoe smash"},
     ]
 
-@app.fixture
+@fixture
 def get_note(notes):
     async def _get_note(pk: int) -> list:
         try:
@@ -32,6 +34,8 @@ def get_note(notes):
             raise HTTPError(404, detail=f"Note with ID {pk} does not exist.")
 
     return _get_note
+
+app = App()
 
 @app.route("/notes/{pk:d}")
 async def retrieve_note(req, res, pk: int, get_note):
@@ -46,8 +50,9 @@ The factory fixture pattern is combined with [fixture cleanup](#cleaning-up-fixt
 
 ```python
 import os
+from bocadillo import fixture
 
-@app.fixture
+@fixture
 def tmpfile():
     files = set()
 
@@ -71,12 +76,16 @@ If the fixture needs to access other fixtures, they should be declared first in 
 To make things clearer, the following example is exactly equivalent to the one above:
 
 ```python
-@app.fixture(factory=True)
+from bocadillo import App, fixture
+
+@fixture(factory=True)
 async def get_note(notes, *, pk: int) -> list:
     try:
         return next(note for note in notes if note["id"] == pk)
     except StopIteration:
         raise HTTPError(404, detail=f"Note with ID {pk} does not exist.")
+
+app = App()
 
 @app.route("/notes/{pk:d}")
 async def retrieve_note(req, res, pk: int, get_note):

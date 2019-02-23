@@ -14,9 +14,13 @@ For this reason, Bocadillo fixtures come with two possible **scopes**:
 For example, let's build a fixture for a set of clients (initially empty) which a WebSocket view can use to keep track of connected clients:
 
 ```python
-@app.fixture(scope="app")
+from bocadillo import App, fixture
+
+@fixture(scope="app")
 def clients() -> set:
     return set()
+
+app = App()
 
 @app.websocket_route("/echo")
 async def echo(ws, clients: set):

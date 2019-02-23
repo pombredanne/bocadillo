@@ -14,20 +14,23 @@ This is a situation in which an auto-used fixture would shine:
 
 ```python
 from databases import Database
+from bocadillo import App, fixture
 
 from myapp.tables import notes  # imaginary
 
-@app.fixture(scope="app")
-async def db() -> Database:
+@fixture(scope="app")
+async def db(app) -> Database:
     db = Database("sqlite://:memory:")
     app.on("startup", db.connect)
     app.on("shutdown", db.disconnect)
     return db
 
-@app.fixture(autouse=True)
+@fixture(autouse=True)
 async def transaction(db: Database):
     async with db.transaction():
         yield
+
+app = App()
 
 @app.route("/")
 async def index(req, res, db: Database):

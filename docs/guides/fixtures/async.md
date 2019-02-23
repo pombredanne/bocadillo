@@ -10,12 +10,15 @@ Here's an example async fixture that draws random JSON data from [HTTPBin](https
 
 ```python
 import aiohttp
+from bocadillo import App, fixture
 
-@app.fixture
+@fixture
 async def random_json():
     async with aiohttp.ClientSession() as session:
         async with session("https://httpbin.org/stream/1") as response:
             return await response.json()
+
+app = App()
 
 @app.route("/data")
 async def data(req, res, random_json: dict):
@@ -34,12 +37,15 @@ If you need to defer evaluating an async fixture until you really need it, you c
 
 ```python
 import aiohttp
+from bocadillo import App, fixture
 
-@app.fixture(lazy=True)
+@fixture(lazy=True)
 async def random_json():
     async with aiohttp.ClientSession() as session:
         async with session("https://httpbin.org/json") as resp:
             return await resp.json()
+
+app = App()
 
 @app.route("/data")
 async def data(req, res, random_json: Awaitable[dict]):

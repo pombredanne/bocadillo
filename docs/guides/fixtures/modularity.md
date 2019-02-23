@@ -7,13 +7,17 @@ Fixtures are **modular** — they can be used in other fixtures too to build a l
 Here's a very contrived example to show how this works:
 
 ```python
-@app.fixture
+from bocadillo import App, fixture
+
+@fixture
 def message():
     return "hello"
 
-@app.fixture
+@fixture
 def message_caps(message):
     return message.upper()
+
+app = App()
 
 @app.route("/")
 async def index(req, res, message_caps):
@@ -26,16 +30,19 @@ As a more elaborate example, let's build a fixture `aiohttp` client session and 
 
 ```python
 import aiohttp
+from bocadillo import App, fixture
 
-@app.fixture
+@fixture
 def http():
     async with aiohttp.ClientSession() as session:
         return session
 
-@app.fixture
+@fixture
 async def random_json(http):
     async with http("https://httpbin.org/json") as resp:
         return await resp.json()
+
+app = App()
 
 @app.route("/data")
 async def data(req, res, random_json):
