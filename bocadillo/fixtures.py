@@ -88,24 +88,22 @@ class Store:
         return fixt
 
     def _check_for_recursive_fixtures(self, name: str, func: Callable):
-        for other in self._get_fixtures(func).values():
+        for other_name, other in self._get_fixtures(func).items():
             if name in self._get_fixtures(other.func):
                 raise TypeError(
-                    f"recursive fixture detected in {func.__name__}: {name}"
+                    "recursive fixture detected: "
+                    f"{name} and {other_name} depend on each other."
                 )
 
     def _get_fixture(self, name: str) -> Optional[Fixture]:
         return self.session_fixtures.get(name)
 
     def _get_fixtures(self, func: Callable) -> Dict[str, Fixture]:
-        return {
-            name: fixture
-            for name, fixture in {
-                param: self._get_fixture(param)
-                for param in signature(func).parameters
-            }.items()
-            if fixture is not None
+        fixtures = {
+            param: self._get_fixture(param)
+            for param in signature(func).parameters
         }
+        return dict(filter(lambda item: item[1] is not None, fixtures.items()))
 
     def _resolve_fixtures(self, func: Callable) -> Tuple[list, dict]:
         args_fixtures: List[Tuple[str, Fixture]] = []
