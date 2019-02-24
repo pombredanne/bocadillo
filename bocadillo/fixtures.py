@@ -118,8 +118,10 @@ class Store:
                 continue
 
             if parameter.kind == Parameter.POSITIONAL_ONLY:
+                print("POSITIONAL ONLY:", name)
                 args_fixtures.append((name, fixt))
             else:
+                print("NOT ONLY POSITIONAL:", name)
                 kwargs_fixtures[name] = fixt
 
         return args_fixtures, kwargs_fixtures
