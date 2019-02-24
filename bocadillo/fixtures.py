@@ -1,5 +1,5 @@
 from functools import wraps, update_wrapper, partial
-from contextlib import suppress
+from contextlib import suppress, contextmanager
 from importlib import import_module
 from typing import Any, Awaitable, Dict, List, Callable, Tuple, Optional
 from inspect import signature, Parameter
@@ -12,7 +12,7 @@ SCOPE_SESSION = "session"
 class Fixture:
     """Represents a (synchronous) fixture.
 
-    This is mostly a wrapper around a fixture function along with
+    This is mostly a wrapper around a fixture function, along with
     some metadata.
     """
 
@@ -78,24 +78,9 @@ class Store:
         if name is None:
             name = func.__name__
 
-        # TODO: resolve the fixture's dependant fixtures
         fixt = Fixture.create(func, name=name, scope=scope)
         self._add(fixt)
         return fixt
-
-
-_STORE = Store()
-fixture = _STORE.fixture  # pylint: disable=invalid-name
-discover_fixtures = _STORE.discover_fixtures  # pylint: disable=invalid-name
-
-
-class BaseResolver:
-    """Resolver for functions."""
-
-    def __init__(self, store: Store = None):
-        if store is None:
-            store = _STORE
-        self.store = store
 
     def _resolve_fixtures(self, func: Callable) -> Tuple[list, dict]:
         args_fixtures: List[Tuple[str, Fixture]] = []
@@ -104,7 +89,7 @@ class BaseResolver:
         sig = signature(func)
 
         for name, parameter in sig.parameters.items():
-            fixt: Optional[Fixture] = self.store.session_fixtures.get(name)
+            fixt: Optional[Fixture] = self.session_fixtures.get(name)
             # TODO: try app fixtures too
             if fixt is None:
                 continue
@@ -132,6 +117,33 @@ class BaseResolver:
             return func(*args, *injected_args, **kwargs, **injected_kwargs)
 
         return with_fixtures
+
+    def freeze(self):
+        """Resolve fixtures used by each fixture."""
+        for fixt in self.session_fixtures.values():
+            fixt.func = self.resolve_function(fixt.func)
+
+    @contextmanager
+    def will_freeze(self):
+        yield
+        self.freeze()
+
+
+_STORE = Store()
+fixture = _STORE.fixture  # pylint: disable=invalid-name
+discover_fixtures = _STORE.discover_fixtures  # pylint: disable=invalid-name
+
+
+class BaseResolver:
+    """Resolver for functions."""
+
+    def __init__(self, store: Store = None):
+        if store is None:
+            store = _STORE
+        self.store = store
+
+    def resolve_function(self, func: Callable) -> Callable:
+        return self.store.resolve_function(func)
 
     # TODO: resolve_coroutine_function
 

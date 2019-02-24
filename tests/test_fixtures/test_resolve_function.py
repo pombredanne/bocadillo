@@ -6,18 +6,12 @@ from bocadillo.fixtures import Store, Resolver
 
 
 def test_resolve_for_func_returns_function(resolver: Resolver):
-    @resolver.resolve_function
-    def func():
-        return "test"
-
+    func = resolver.resolve_function(lambda: "test")
     assert inspect.isfunction(func)
 
 
 def test_if_no_fixture_declared_then_behaves_like_func(resolver: Resolver):
-    @resolver.resolve_function
-    def func():
-        return "test"
-
+    func = resolver.resolve_function(lambda: "test")
     assert func() == "test"
 
 
@@ -28,9 +22,8 @@ def test_if_fixture_does_not_exist_then_missing_argument(
     def gra():
         return "gra"
 
-    @resolver.resolve_function
-    def func(arg):  # <- "gra" exists, but not "arg"
-        return 2 * arg
+    # "gra" exists, but not "arg"
+    func = resolver.resolve_function(lambda arg: 2 * arg)
 
     with pytest.raises(TypeError):
         func()
@@ -43,12 +36,35 @@ def test_if_fixture_exists_then_injected(store: Store, resolver: Resolver):
     def arg():
         return "foo"
 
-    @resolver.resolve_function
-    def func(arg):
-        return 2 * arg
-
+    func = resolver.resolve_function(lambda arg: 2 * arg)
     assert func() == "foofoo"
 
 
-def test_foo(a):
-    pass
+def test_fixture_uses_fixture(store: Store, resolver: Resolver):
+    with store.will_freeze():
+
+        @store.fixture
+        def a():
+            return "a"
+
+        @store.fixture
+        def b(a):
+            return a * 2
+
+    func = resolver.resolve_function(lambda b: b)
+    assert func() == "aa"
+
+
+def test_fixture_uses_fixture_declared_later(store: Store, resolver: Resolver):
+    with store.will_freeze():
+
+        @store.fixture
+        def b(a):
+            return a * 2
+
+        @store.fixture
+        def a():
+            return "a"
+
+    func = resolver.resolve_function(lambda b: b)
+    assert func() == "aa"
