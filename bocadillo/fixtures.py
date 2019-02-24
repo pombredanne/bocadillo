@@ -53,13 +53,15 @@ class Store:
     def empty(self):
         return not self.session_fixtures
 
+    def exists(self, name: str) -> bool:
+        return name in self.session_fixtures
+
+    def get(self, name: str) -> Optional[Fixture]:
+        return self.session_fixtures.get(name)
+
     def _get_collection(self, scope: str) -> dict:
         # TODO: add support for app fixtures
         return self.session_fixtures
-
-    def _add(self, fixt: Fixture):
-        collection = self._get_collection(fixt.scope)
-        collection[fixt.name] = fixt
 
     def discover_default(self):
         with suppress(ImportError):
@@ -87,6 +89,10 @@ class Store:
 
         return fixt
 
+    def _add(self, fixt: Fixture):
+        collection = self._get_collection(fixt.scope)
+        collection[fixt.name] = fixt
+
     def _check_for_recursive_fixtures(self, name: str, func: Callable):
         for other_name, other in self._get_fixtures(func).items():
             if name in self._get_fixtures(other.func):
@@ -95,13 +101,9 @@ class Store:
                     f"{name} and {other_name} depend on each other."
                 )
 
-    def _get_fixture(self, name: str) -> Optional[Fixture]:
-        return self.session_fixtures.get(name)
-
     def _get_fixtures(self, func: Callable) -> Dict[str, Fixture]:
         fixtures = {
-            param: self._get_fixture(param)
-            for param in signature(func).parameters
+            param: self.get(param) for param in signature(func).parameters
         }
         return dict(filter(lambda item: item[1] is not None, fixtures.items()))
 
