@@ -49,9 +49,17 @@ class Store:
         # TODO: add support for app fixtures
         self.session_fixtures: Dict[str, Fixture] = {}
 
+    @property
+    def empty(self):
+        return not self.session_fixtures
+
     def _get_collection(self, scope: str) -> dict:
         # TODO: add support for app fixtures
         return self.session_fixtures
+
+    def _add(self, fixt: Fixture):
+        collection = self._get_collection(fixt.scope)
+        collection[fixt.name] = fixt
 
     def discover_default(self):
         with suppress(ImportError):
@@ -60,14 +68,6 @@ class Store:
     def discover_fixtures(self, *module_paths: str):
         for module_path in module_paths:
             import_module(module_path)
-
-    @property
-    def empty(self):
-        return not self.session_fixtures
-
-    def _add(self, fixt: Fixture):
-        collection = self._get_collection(fixt.scope)
-        collection[fixt.name] = fixt
 
     def fixture(
         self, func: Callable = None, scope: str = "session", name: str = None
@@ -78,6 +78,7 @@ class Store:
         if name is None:
             name = func.__name__
 
+        # TODO: resolve the fixture's dependant fixtures
         fixt = Fixture.create(func, name=name, scope=scope)
         self._add(fixt)
         return fixt

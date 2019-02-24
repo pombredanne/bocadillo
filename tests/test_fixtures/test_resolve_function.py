@@ -48,3 +48,7 @@ def test_if_fixture_exists_then_injected(store: Store, resolver: Resolver):
         return 2 * arg
 
     assert func() == "foofoo"
+
+
+def test_foo(a):
+    pass
