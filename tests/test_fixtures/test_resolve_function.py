@@ -21,9 +21,15 @@ def test_if_no_fixture_declared_then_behaves_like_func(resolver: Resolver):
     assert func() == "test"
 
 
-def test_if_fixture_does_not_exist_then_missing_argument(resolver: Resolver):
+def test_if_fixture_does_not_exist_then_missing_argument(
+    store: Store, resolver: Resolver
+):
+    @store.fixture
+    def gra():
+        return "gra"
+
     @resolver.resolve_function
-    def func(arg):
+    def func(arg):  # <- "gra" exists, but not "arg"
         return 2 * arg
 
     with pytest.raises(TypeError):
