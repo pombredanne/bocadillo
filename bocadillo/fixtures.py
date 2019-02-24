@@ -78,17 +78,40 @@ class Store:
         if name is None:
             name = func.__name__
 
+        # NOTE: save the new fixture before checking for recursion,
+        # so that its dependants can detect it as a dependency.
         fixt = Fixture.create(func, name=name, scope=scope)
         self._add(fixt)
+
+        self._check_for_recursive_fixtures(name, func)
+
         return fixt
+
+    def _check_for_recursive_fixtures(self, name: str, func: Callable):
+        for other in self._get_fixtures(func).values():
+            if name in self._get_fixtures(other.func):
+                raise TypeError(
+                    f"recursive fixture detected in {func.__name__}: {name}"
+                )
+
+    def _get_fixture(self, name: str) -> Optional[Fixture]:
+        return self.session_fixtures.get(name)
+
+    def _get_fixtures(self, func: Callable) -> Dict[str, Fixture]:
+        return {
+            name: fixture
+            for name, fixture in {
+                param: self._get_fixture(param)
+                for param in signature(func).parameters
+            }.items()
+            if fixture is not None
+        }
 
     def _resolve_fixtures(self, func: Callable) -> Tuple[list, dict]:
         args_fixtures: List[Tuple[str, Fixture]] = []
         kwargs_fixtures: Dict[str, Fixture] = {}
 
-        sig = signature(func)
-
-        for name, parameter in sig.parameters.items():
+        for name, parameter in signature(func).parameters.items():
             fixt: Optional[Fixture] = self.session_fixtures.get(name)
             # TODO: try app fixtures too
             if fixt is None:

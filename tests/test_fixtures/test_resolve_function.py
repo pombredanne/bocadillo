@@ -68,3 +68,19 @@ def test_fixture_uses_fixture_declared_later(store: Store, resolver: Resolver):
 
     func = resolver.resolve_function(lambda b: b)
     assert func() == "aa"
+
+
+def test_detect_recursive_fixture(store: Store):
+    with store.will_freeze():
+
+        @store.fixture
+        def b(a):
+            return a * 2
+
+        with pytest.raises(TypeError) as ctx:
+
+            @store.fixture
+            def a(b):
+                return a * 2
+
+        assert "recursive" in str(ctx.value)
