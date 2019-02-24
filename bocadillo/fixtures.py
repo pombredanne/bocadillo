@@ -53,10 +53,10 @@ class Store:
     def empty(self):
         return not self.session_fixtures
 
-    def exists(self, name: str) -> bool:
+    def _exists(self, name: str) -> bool:
         return name in self.session_fixtures
 
-    def get(self, name: str) -> Optional[Fixture]:
+    def _get(self, name: str) -> Optional[Fixture]:
         return self.session_fixtures.get(name)
 
     def _get_collection(self, scope: str) -> dict:
@@ -103,7 +103,7 @@ class Store:
 
     def _get_fixtures(self, func: Callable) -> Dict[str, Fixture]:
         fixtures = {
-            param: self.get(param) for param in signature(func).parameters
+            param: self._get(param) for param in signature(func).parameters
         }
         return dict(filter(lambda item: item[1] is not None, fixtures.items()))
 
@@ -150,6 +150,12 @@ class Store:
     def will_freeze(self):
         yield
         self.freeze()
+
+    def __contains__(self, element: Any) -> bool:
+        return self._exists(element)
+
+    def __bool__(self) -> bool:
+        return not self.empty
 
 
 _STORE = Store()

@@ -18,14 +18,12 @@ def fixtureconf(store: Store):
 
 def test_if_no_fixture_conf_then_ok(store: Store):
     store.discover_default()
-    assert store.empty
+    assert not store
 
 
 @pytest.mark.usefixtures("fixtureconf")
 def test_if_fixtureconf_then_fixtures_are_loaded(store: Store):
     store.discover_default()
-    assert not store.empty
-    assert store.exists("example")
-
-    func = store.resolve_function(lambda example: 2 * example)
-    assert func() == "foofoo"
+    assert store
+    assert "example" in store
+    assert store.resolve_function(lambda example: 2 * example)() == "foofoo"
