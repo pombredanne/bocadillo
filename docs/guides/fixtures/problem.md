@@ -95,7 +95,7 @@ As a teaser, here's how fixtures can allow us to implement beautiful, testable c
 import aioredis
 from bocadillo import fixture
 
-@fixture
+@fixture(scope="app")
 async def redis():
     redis = await aioredis.create_redis("redis://localhost")
     yield redis
