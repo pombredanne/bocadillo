@@ -8,6 +8,21 @@ CoroutineFunction = Callable[..., Awaitable]
 SCOPE_SESSION = "session"
 
 
+class FixtureDeclarationError(Exception):
+    """Base exception for situations when a fixture was ill-declared."""
+
+
+class RecursiveFixtureError(FixtureDeclarationError):
+    """Raised when two fixtures depend on each other."""
+
+    def __init__(self, first: str, second: str):
+        message = (
+            "recursive fixture detected: "
+            f"{first} and {second} depend on each other."
+        )
+        super().__init__(message)
+
+
 # TODO: AsyncFixture
 class Fixture:
     """Represents a (synchronous) fixture.
@@ -26,8 +41,6 @@ class Fixture:
     @classmethod
     def create(cls, func: Callable, name: str, scope: str) -> "Fixture":
         """Factory method to build fixtures of the appropriate scope."""
-        if scope != SCOPE_SESSION:
-            raise ValueError("non-session fixtures aren't supported yet")
         return cls(func, name=name, scope=scope)
 
     def __repr__(self) -> str:
@@ -96,10 +109,7 @@ class Store:
     def _check_for_recursive_fixtures(self, name: str, func: Callable):
         for other_name, other in self._get_fixtures(func).items():
             if name in self._get_fixtures(other.func):
-                raise TypeError(
-                    "recursive fixture detected: "
-                    f"{name} and {other_name} depend on each other."
-                )
+                raise RecursiveFixtureError(name, other_name)
 
     def _get_fixtures(self, func: Callable) -> Dict[str, Fixture]:
         fixtures = {
@@ -111,16 +121,30 @@ class Store:
         args_fixtures: List[Tuple[str, Fixture]] = []
         kwargs_fixtures: Dict[str, Fixture] = {}
 
+        # NOTE: This flag goes down when we process a non-fixture parameter.
+        # It allows to detect fixture parameters declared *after*
+        # non-fixture parameters.
+        processing_fixtures = True
+
         for name, parameter in signature(func).parameters.items():
             fixt: Optional[Fixture] = self.session_fixtures.get(name)
             # TODO: try app fixtures too
+
             if fixt is None:
+                processing_fixtures = False
                 continue
 
-            if parameter.kind == Parameter.POSITIONAL_ONLY:
-                args_fixtures.append((name, fixt))
-            else:
+            if not processing_fixtures:
+                raise FixtureDeclarationError(
+                    "Fixture parameters must be declared *before* other "
+                    "parameters, so that they can be deterministically passed "
+                    "to the consuming function."
+                )
+
+            if parameter.kind == Parameter.KEYWORD_ONLY:
                 kwargs_fixtures[name] = fixt
+            else:
+                args_fixtures.append((name, fixt))
 
         return args_fixtures, kwargs_fixtures
 
@@ -137,7 +161,9 @@ class Store:
             injected_kwargs = {
                 name: fixt() for name, fixt in kwargs_fixtures.items()
             }
-            return func(*args, *injected_args, **kwargs, **injected_kwargs)
+            # NOTE: injected args must be given first by convention.
+            # The order for kwargs should not matter.
+            return func(*injected_args, *args, **injected_kwargs, **kwargs)
 
         return with_fixtures
 

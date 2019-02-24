@@ -15,7 +15,7 @@ def test_session_fixture_is_recomputed_every_time(store: Store):
         return []
 
     @store.resolve_function
-    def add(value, items):
+    def add(items, value):
         items.append(value)
         return items
 
