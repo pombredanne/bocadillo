@@ -33,19 +33,22 @@ class Fixture:
     some metadata.
     """
 
-    def __init__(self, func: Callable, name: str, scope: str):
+    def __init__(self, func: Callable, name: str, scope: str, lazy: bool):
+        if lazy and scope != SCOPE_SESSION:
+            raise TypeError("Lazy fixtures must be session-scoped")
         if not iscoroutinefunction(func):
             func = wrap_async(func)
         self.func = func
         self.name = name
         self.scope = scope
+        self.lazy = lazy
 
         update_wrapper(self, self.func)
 
     @classmethod
-    def create(cls, func: Callable, name: str, scope: str) -> "Fixture":
+    def create(cls, func, **kwargs) -> "Fixture":
         """Factory method to build fixtures of the appropriate scope."""
-        return cls(func, name=name, scope=scope)
+        return cls(func, **kwargs)
 
     def __repr__(self) -> str:
         return (
@@ -87,17 +90,21 @@ class Store:
             import_module(module_path)
 
     def fixture(
-        self, func: Callable = None, scope: str = "session", name: str = None
+        self,
+        func: Callable = None,
+        scope: str = "session",
+        name: str = None,
+        lazy: bool = False,
     ) -> Fixture:
         if func is None:
-            return partial(self.fixture, scope=scope, name=name)
+            return partial(self.fixture, scope=scope, name=name, lazy=lazy)
 
         if name is None:
             name = func.__name__
 
         # NOTE: save the new fixture before checking for recursion,
         # so that its dependants can detect it as a dependency.
-        fixt = Fixture.create(func, name=name, scope=scope)
+        fixt = Fixture.create(func, name=name, scope=scope, lazy=lazy)
         self._add(fixt)
 
         self._check_for_recursive_fixtures(name, func)
@@ -164,9 +171,13 @@ class Store:
         @wraps(func)
         async def with_fixtures(*args, **kwargs):
             # Evaluate the fixtures when the function is actually called.
-            injected_args = [await fixt() for _, fixt in args_fixtures]
+            injected_args = [
+                fixt() if fixt.lazy else await fixt()
+                for _, fixt in args_fixtures
+            ]
             injected_kwargs = {
-                name: await fixt() for name, fixt in kwargs_fixtures.items()
+                name: fixt() if fixt.lazy else await fixt()
+                for name, fixt in kwargs_fixtures.items()
             }
             # NOTE: injected args must be given first by convention.
             # The order for kwargs should not matter.
