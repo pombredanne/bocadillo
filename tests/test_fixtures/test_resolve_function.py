@@ -4,18 +4,20 @@ import pytest
 
 from bocadillo.fixtures import Store, FixtureDeclarationError
 
+pytestmark = pytest.mark.asyncio
 
-def test_resolve_for_func_returns_function(store: Store):
+
+async def test_resolve_for_func_returns_coroutine_function(store: Store):
     func = store.resolve_function(lambda: "test")
-    assert inspect.isfunction(func)
+    assert inspect.iscoroutinefunction(func)
 
 
-def test_if_no_fixture_declared_then_behaves_like_func(store: Store):
+async def test_if_no_fixture_declared_then_behaves_like_func(store: Store):
     func = store.resolve_function(lambda: "test")
-    assert func() == "test"
+    assert await func() == "test"
 
 
-def test_if_fixture_does_not_exist_then_missing_argument(store: Store):
+async def test_if_fixture_does_not_exist_then_missing_argument(store: Store):
     @store.fixture
     def gra():
         return "gra"
@@ -24,20 +26,24 @@ def test_if_fixture_does_not_exist_then_missing_argument(store: Store):
     func = store.resolve_function(lambda arg: 2 * arg)
 
     with pytest.raises(TypeError):
-        func()
+        await func()
 
-    assert func(10) == 20
+    assert await func(10) == 20
 
 
-def test_if_fixture_exists_then_injected(store: Store):
+async def test_if_fixture_exists_then_injected(store: Store):
     @store.fixture
     def arg():
         return "foo"
 
-    assert store.resolve_function(lambda arg: 2 * arg)() == "foofoo"
+    @store.resolve_function
+    def func(arg):
+        return 2 * arg
+
+    assert await func() == "foofoo"
 
 
-def test_non_fixture_parameters_after_fixture_parameters_ok(store: Store):
+async def test_non_fixture_parameters_after_fixture_parameters_ok(store: Store):
     @store.fixture
     def pitch():
         return "C#"
@@ -47,11 +53,11 @@ def test_non_fixture_parameters_after_fixture_parameters_ok(store: Store):
         assert pitch == "C#"
         return (pitch, duration)
 
-    assert play(1) == ("C#", 1)
-    assert play(duration=1) == ("C#", 1)
+    assert await play(1) == ("C#", 1)
+    assert await play(duration=1) == ("C#", 1)
 
 
-def test_fixture_parameters_before_fixture_parameters_fails(store: Store):
+async def test_fixture_parameters_before_fixture_parameters_fails(store: Store):
     @store.fixture
     def pitch():
         return "C#"

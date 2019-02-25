@@ -1,14 +1,15 @@
 import asyncio
 import re
+from functools import wraps
 from typing import (
-    Callable,
-    cast,
-    List,
-    TypeVar,
-    Union,
-    Optional,
     Any,
     Awaitable,
+    Callable,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
 )
 
 from starlette.concurrency import run_in_threadpool
@@ -43,6 +44,14 @@ async def call_async(
 
     async_func = cast(Callable[..., Awaitable[_V]], func)
     return await async_func(*args, **kwargs)
+
+
+def wrap_async(func: Callable[..., _V]) -> Callable[..., Awaitable[_V]]:
+    @wraps(func)
+    async def async_func(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return async_func
 
 
 def camel_to_snake(name: str) -> str:

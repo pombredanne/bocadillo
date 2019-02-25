@@ -1,8 +1,10 @@
 from functools import wraps, update_wrapper, partial
 from contextlib import suppress, contextmanager
 from importlib import import_module
-from typing import Any, Awaitable, Dict, List, Callable, Tuple, Optional
-from inspect import signature, Parameter
+from typing import Any, Awaitable, Dict, List, Callable, Tuple, Optional, Union
+from inspect import signature, Parameter, iscoroutinefunction
+
+from .compat import call_async, wrap_async
 
 CoroutineFunction = Callable[..., Awaitable]
 SCOPE_SESSION = "session"
@@ -48,9 +50,7 @@ class Fixture:
             f"<Fixture name={self.name}, scope={self.scope}, func={self.func}>"
         )
 
-    def __call__(self) -> Any:
-        # TODO: support fixtures with parameters
-        # TODO: support async fixtures
+    def __call__(self) -> Union[Awaitable, Any]:
         return self.func()
 
 
@@ -148,22 +148,32 @@ class Store:
 
         return args_fixtures, kwargs_fixtures
 
-    def resolve_function(self, func: Callable) -> Callable:
+    def resolve_function(
+        self, func: Union[Callable, CoroutineFunction]
+    ) -> CoroutineFunction:
+        if not iscoroutinefunction(func):
+            func = wrap_async(func)
+
         args_fixtures, kwargs_fixtures = self._resolve_fixtures(func)
 
         if not args_fixtures and not kwargs_fixtures:
             return func
 
         @wraps(func)
-        def with_fixtures(*args, **kwargs):
+        async def with_fixtures(*args, **kwargs):
             # Evaluate the fixtures when the function is actually called.
-            injected_args = [fixt() for _, fixt in args_fixtures]
+            injected_args = [
+                await call_async(fixt) for _, fixt in args_fixtures
+            ]
             injected_kwargs = {
-                name: fixt() for name, fixt in kwargs_fixtures.items()
+                name: await call_async(fixt)
+                for name, fixt in kwargs_fixtures.items()
             }
             # NOTE: injected args must be given first by convention.
             # The order for kwargs should not matter.
-            return func(*injected_args, *args, **injected_kwargs, **kwargs)
+            return await func(
+                *injected_args, *args, **injected_kwargs, **kwargs
+            )
 
         return with_fixtures
 
