@@ -67,3 +67,15 @@ async def test_fixture_parameters_before_fixture_parameters_fails(store: Store):
         @store.resolve_function
         def play(duration, pitch):  # duration is before a fixture param
             pass
+
+
+async def test_resolve_async_function(store: Store):
+    @store.fixture
+    def pitch():
+        return "C#"
+
+    @store.resolve_function
+    async def play(pitch):
+        return 2 * pitch
+
+    assert await play() == "C#C#"
