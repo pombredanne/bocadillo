@@ -1,7 +1,7 @@
 import pytest
 from inspect import iscoroutine
 
-from bocadillo.fixtures import Store
+from bocadillo.fixtures import Store, FixtureDeclarationError
 
 pytestmark = pytest.mark.asyncio
 
@@ -34,3 +34,11 @@ async def test_lazy_async_fixture(store: Store):
         return 2 * await pitch
 
     assert await play() == "C#C#"
+
+
+async def test_lazy_fixture_must_be_session_scoped(store: Store):
+    with pytest.raises(FixtureDeclarationError):
+
+        @store.fixture(lazy=True, scope="other")
+        async def pitch():
+            pass

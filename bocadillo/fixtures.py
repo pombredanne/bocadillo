@@ -35,10 +35,14 @@ class Fixture:
 
     def __init__(self, func: Callable, name: str, scope: str, lazy: bool):
         if lazy and scope != SCOPE_SESSION:
-            raise TypeError("Lazy fixtures must be session-scoped")
+            raise FixtureDeclarationError(
+                "Lazy fixtures must be session-scoped"
+            )
+
         if not iscoroutinefunction(func):
             func = wrap_async(func)
-        self.func = func
+
+        self.func: CoroutineFunction = func
         self.name = name
         self.scope = scope
         self.lazy = lazy
@@ -176,7 +180,7 @@ class Store:
                 for _, fixt in args_fixtures
             ]
             injected_kwargs = {
-                name: fixt() if fixt.lazy else await fixt()
+                name: (fixt() if fixt.lazy else await fixt())
                 for name, fixt in kwargs_fixtures.items()
             }
             # NOTE: injected args must be given first by convention.
