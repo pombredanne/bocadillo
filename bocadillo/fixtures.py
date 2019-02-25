@@ -34,6 +34,8 @@ class Fixture:
     """
 
     def __init__(self, func: Callable, name: str, scope: str):
+        if not iscoroutinefunction(func):
+            func = wrap_async(func)
         self.func = func
         self.name = name
         self.scope = scope
@@ -50,7 +52,7 @@ class Fixture:
             f"<Fixture name={self.name}, scope={self.scope}, func={self.func}>"
         )
 
-    def __call__(self) -> Union[Awaitable, Any]:
+    def __call__(self) -> Awaitable:
         return self.func()
 
 
@@ -162,12 +164,9 @@ class Store:
         @wraps(func)
         async def with_fixtures(*args, **kwargs):
             # Evaluate the fixtures when the function is actually called.
-            injected_args = [
-                await call_async(fixt) for _, fixt in args_fixtures
-            ]
+            injected_args = [await fixt() for _, fixt in args_fixtures]
             injected_kwargs = {
-                name: await call_async(fixt)
-                for name, fixt in kwargs_fixtures.items()
+                name: await fixt() for name, fixt in kwargs_fixtures.items()
             }
             # NOTE: injected args must be given first by convention.
             # The order for kwargs should not matter.

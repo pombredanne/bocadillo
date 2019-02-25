@@ -3,7 +3,10 @@ import pytest
 from bocadillo.fixtures import Store, Resolver, RecursiveFixtureError
 
 
-def test_fixture_uses_fixture(store: Store, resolver: Resolver):
+pytestmark = pytest.mark.asyncio
+
+
+async def test_fixture_uses_fixture(store: Store):
     with store.will_freeze():
 
         @store.fixture
@@ -14,11 +17,11 @@ def test_fixture_uses_fixture(store: Store, resolver: Resolver):
         def b(a):
             return a * 2
 
-    func = resolver.resolve_function(lambda b: b)
-    assert func() == "aa"
+    func = store.resolve_function(lambda b: 2 * b)
+    assert await func() == "aaaa"
 
 
-def test_fixture_uses_fixture_declared_later(store: Store, resolver: Resolver):
+async def test_fixture_uses_fixture_declared_later(store: Store):
     with store.will_freeze():
 
         @store.fixture
@@ -29,11 +32,11 @@ def test_fixture_uses_fixture_declared_later(store: Store, resolver: Resolver):
         def a():
             return "a"
 
-    func = resolver.resolve_function(lambda b: b)
-    assert func() == "aa"
+    func = store.resolve_function(lambda b: 2 * b)
+    assert await func() == "aaaa"
 
 
-def test_detect_recursive_fixture(store: Store):
+async def test_detect_recursive_fixture(store: Store):
     @store.fixture
     def b(a):
         return a * 2

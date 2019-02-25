@@ -14,12 +14,13 @@ def notes_module(store: Store):
     sys.modules["notes"] = NotesModule
 
 
+@pytest.mark.asyncio
 @pytest.mark.usefixtures("notes_module")
-def test_discover_fixtures(store: Store):
+async def test_discover_fixtures(store: Store):
     store.discover_fixtures("notes")
     assert store
     assert "pitch" in store
-    assert store.resolve_function(lambda pitch: 2 * pitch)() == "C#C#"
+    assert await store.resolve_function(lambda pitch: 2 * pitch)() == "C#C#"
 
 
 def test_if_module_does_not_exist_then_error(store: Store):
