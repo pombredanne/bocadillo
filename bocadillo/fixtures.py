@@ -26,9 +26,8 @@ class RecursiveFixtureError(FixtureDeclarationError):
         super().__init__(message)
 
 
-# TODO: AsyncFixture
 class Fixture:
-    """Represents a (synchronous) fixture.
+    """Represents a fixture.
 
     This is mostly a wrapper around a fixture function, along with
     some metadata.
@@ -47,12 +46,13 @@ class Fixture:
         self.name = name
         self.scope = scope
         self.lazy = lazy
+        self._instance = None
 
         update_wrapper(self, self.func)
 
     @classmethod
     def create(cls, func, **kwargs) -> "Fixture":
-        """Factory method to build fixtures of the appropriate scope."""
+        """Factory method to build a fixture of the appropriate scope."""
         scope: Optional[str] = kwargs.get("scope")
         if scope == SCOPE_APP:
             return AppFixture(func, **kwargs)
@@ -70,6 +70,13 @@ class Fixture:
 
 
 class AppFixture(Fixture):
+    """Represents an app-scoped fixture.
+
+    When called, it builds its instance if necessary and returns it. This
+    means that the underlying fixture is only built once and is reused
+    across sessions.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._instance: Any = None
