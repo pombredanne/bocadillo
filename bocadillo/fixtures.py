@@ -55,7 +55,6 @@ class Fixture:
             )
 
         if inspect.isgeneratorfunction(func):
-            print("generator")
             func = wrap_generator_async(func)
         elif inspect.isasyncgenfunction(func):
             pass
@@ -120,12 +119,13 @@ class AppFixture(Fixture):
         super().__init__(*args, **kwargs)
         self._instance: Any = None
 
-    async def __call__(self, stack: AsyncExitStack) -> Any:
-        # NOTE: the returned value is *not* an awaitable, so
-        # this function *must* be declared `async` in order to be awaitable.
+    async def _get_instance(self):
         if self._instance is None:
             self._instance = await self.func()
         return self._instance
+
+    def __call__(self, stack: AsyncExitStack) -> Awaitable:
+        return self._get_instance()
 
 
 class Store:
@@ -133,22 +133,17 @@ class Store:
     DEFAULT_FIXTURES_MODULE = "fixtureconf"
 
     def __init__(self):
-        # TODO: add support for app fixtures
-        self.session_fixtures: Dict[str, Fixture] = {}
+        self.fixtures: Dict[str, Fixture] = {}
 
     @property
     def empty(self):
-        return not self.session_fixtures
+        return not self.fixtures
 
     def _exists(self, name: str) -> bool:
-        return name in self.session_fixtures
+        return name in self.fixtures
 
     def _get(self, name: str) -> Optional[Fixture]:
-        return self.session_fixtures.get(name)
-
-    def _get_collection(self, scope: str) -> dict:
-        # TODO: add support for app fixtures
-        return self.session_fixtures
+        return self.fixtures.get(name)
 
     def discover_default(self):
         with suppress(ImportError):
@@ -181,8 +176,7 @@ class Store:
         return fixt
 
     def _add(self, fixt: Fixture):
-        collection = self._get_collection(fixt.scope)
-        collection[fixt.name] = fixt
+        self.fixtures[fixt.name] = fixt
 
     def _check_for_recursive_fixtures(self, name: str, func: Callable):
         for other_name, other in self._get_fixtures(func).items():
@@ -206,8 +200,7 @@ class Store:
         processing_fixtures = True
 
         for name, parameter in inspect.signature(func).parameters.items():
-            fixt: Optional[Fixture] = self.session_fixtures.get(name)
-            # TODO: try app fixtures too
+            fixt: Optional[Fixture] = self.fixtures.get(name)
 
             if fixt is None:
                 processing_fixtures = False
@@ -266,7 +259,7 @@ class Store:
 
     def freeze(self):
         """Resolve fixtures used by each fixture."""
-        for fixt in self.session_fixtures.values():
+        for fixt in self.fixtures.values():
             fixt.func = self.resolve_function(fixt.func)
 
     @contextmanager
