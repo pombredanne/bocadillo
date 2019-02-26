@@ -2,7 +2,7 @@ from functools import wraps, update_wrapper, partial
 from contextlib import suppress, contextmanager
 from importlib import import_module
 from typing import Any, Awaitable, Dict, List, Callable, Tuple, Optional, Union
-from inspect import signature, Parameter, iscoroutinefunction
+import inspect
 
 from .compat import wrap_async
 
@@ -39,7 +39,7 @@ class Fixture:
                 "Lazy fixtures must be session-scoped"
             )
 
-        if not iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             func = wrap_async(func)
 
         self.func: CoroutineFunction = func
@@ -48,6 +48,10 @@ class Fixture:
         self.lazy = lazy
 
         update_wrapper(self, self.func)
+
+    @property
+    def awaitable(self) -> bool:
+        return not self.lazy
 
     @classmethod
     def create(cls, func, **kwargs) -> "Fixture":
@@ -151,7 +155,8 @@ class Store:
 
     def _get_fixtures(self, func: Callable) -> Dict[str, Fixture]:
         fixtures = {
-            param: self._get(param) for param in signature(func).parameters
+            param: self._get(param)
+            for param in inspect.signature(func).parameters
         }
         return dict(filter(lambda item: item[1] is not None, fixtures.items()))
 
@@ -164,7 +169,7 @@ class Store:
         # non-fixture parameters.
         processing_fixtures = True
 
-        for name, parameter in signature(func).parameters.items():
+        for name, parameter in inspect.signature(func).parameters.items():
             fixt: Optional[Fixture] = self.session_fixtures.get(name)
             # TODO: try app fixtures too
 
@@ -179,7 +184,7 @@ class Store:
                     "to the consuming function."
                 )
 
-            if parameter.kind == Parameter.KEYWORD_ONLY:
+            if parameter.kind == inspect.Parameter.KEYWORD_ONLY:
                 kwargs_fixtures[name] = fixt
             else:
                 args_fixtures.append((name, fixt))
@@ -189,7 +194,7 @@ class Store:
     def resolve_function(
         self, func: Union[Callable, CoroutineFunction]
     ) -> CoroutineFunction:
-        if not iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             func = wrap_async(func)
 
         args_fixtures, kwargs_fixtures = self._resolve_fixtures(func)
@@ -201,7 +206,7 @@ class Store:
         async def with_fixtures(*args, **kwargs):
             # Evaluate the fixtures when the function is actually called.
             injected_args = [
-                fixt() if fixt.lazy else await fixt()
+                await fixt() if fixt.awaitable else fixt()
                 for _, fixt in args_fixtures
             ]
             injected_kwargs = {
