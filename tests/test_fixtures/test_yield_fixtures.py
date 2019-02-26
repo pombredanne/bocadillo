@@ -1,0 +1,25 @@
+import pytest
+
+from bocadillo.fixtures import Store
+
+pytestmark = pytest.mark.asyncio
+
+
+async def test_sync_session_yield_fixture(store: Store):
+    setup = False
+    teardown = False
+
+    @store.fixture
+    def resource():
+        nonlocal setup, teardown
+        setup = True
+        yield "resource"
+        teardown = True
+
+    @store.resolve_function
+    def consumer(resource: str):
+        return resource.upper()
+
+    assert await consumer() == "RESOURCE"
+    assert setup
+    assert teardown

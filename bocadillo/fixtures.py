@@ -1,10 +1,20 @@
 from functools import wraps, update_wrapper, partial
 from contextlib import suppress, contextmanager
 from importlib import import_module
-from typing import Any, Awaitable, Dict, List, Callable, Tuple, Optional, Union
+from typing import (
+    Any,
+    Awaitable,
+    Dict,
+    List,
+    Callable,
+    Tuple,
+    Optional,
+    Union,
+    AsyncGenerator,
+)
 import inspect
 
-from .compat import wrap_async
+from .compat import wrap_async, wrap_generator_async, AsyncExitStack
 
 CoroutineFunction = Callable[..., Awaitable]
 SCOPE_SESSION = "session"
@@ -26,6 +36,11 @@ class RecursiveFixtureError(FixtureDeclarationError):
         super().__init__(message)
 
 
+async def _terminate_agen(async_gen: AsyncGenerator):
+    with suppress(StopAsyncIteration):
+        await async_gen.asend(None)
+
+
 class Fixture:
     """Represents a fixture.
 
@@ -39,19 +54,17 @@ class Fixture:
                 "Lazy fixtures must be session-scoped"
             )
 
-        if not inspect.iscoroutinefunction(func):
+        if inspect.isgeneratorfunction(func):
+            func = wrap_generator_async(func)
+        elif not inspect.iscoroutinefunction(func):
             func = wrap_async(func)
 
-        self.func: CoroutineFunction = func
+        self.func: Union[AsyncGenerator, CoroutineFunction] = func
         self.name = name
         self.scope = scope
         self.lazy = lazy
 
         update_wrapper(self, self.func)
-
-    @property
-    def awaitable(self) -> bool:
-        return not self.lazy
 
     @classmethod
     def create(cls, func, **kwargs) -> "Fixture":
@@ -66,10 +79,26 @@ class Fixture:
             f"<Fixture name={self.name}, scope={self.scope}, func={self.func}>"
         )
 
-    def __call__(self) -> Awaitable:
-        # NOTE: the returned value is an awaitable, so we *must not*
-        # declare this function as `async` — its return value already is.
-        return self.func()
+    # NOTE: the returned value is an awaitable, so we *must not*
+    # declare this function as `async` — its return value already is.
+    def __call__(self, stack: AsyncExitStack) -> Awaitable:
+        value: Union[Awaitable, AsyncGenerator] = self.func()
+
+        if inspect.isasyncgen(value):
+            agen = value
+            # We cannot use `await` in here => define a coroutine function
+            # and return the (awaitable) coroutine itself.
+
+            async def get_value() -> Any:
+                # Executes setup + `yield <some_value>`.
+                val = await agen.asend(None)
+                # Registers cleanup to be executed when the stack exits.
+                stack.push_async_callback(partial(_terminate_agen, agen))
+                return val
+
+            value: Awaitable = get_value()
+
+        return value
 
 
 class AppFixture(Fixture):
@@ -84,7 +113,7 @@ class AppFixture(Fixture):
         super().__init__(*args, **kwargs)
         self._instance: Any = None
 
-    async def __call__(self) -> Any:
+    async def __call__(self, stack: AsyncExitStack) -> Any:
         # NOTE: the returned value is *not* an awaitable, so
         # this function *must* be declared `async` in order to be awaitable.
         if self._instance is None:
@@ -205,19 +234,20 @@ class Store:
         @wraps(func)
         async def with_fixtures(*args, **kwargs):
             # Evaluate the fixtures when the function is actually called.
-            injected_args = [
-                await fixt() if fixt.awaitable else fixt()
-                for _, fixt in args_fixtures
-            ]
-            injected_kwargs = {
-                name: (fixt() if fixt.lazy else await fixt())
-                for name, fixt in kwargs_fixtures.items()
-            }
-            # NOTE: injected args must be given first by convention.
-            # The order for kwargs should not matter.
-            return await func(
-                *injected_args, *args, **injected_kwargs, **kwargs
-            )
+            async with AsyncExitStack() as stack:
+                injected_args = [
+                    fixt(stack) if fixt.lazy else await fixt(stack)
+                    for _, fixt in args_fixtures
+                ]
+                injected_kwargs = {
+                    name: (fixt() if fixt.lazy else await fixt())
+                    for name, fixt in kwargs_fixtures.items()
+                }
+                # NOTE: injected args must be given first by convention.
+                # The order for kwargs should not matter.
+                return await func(
+                    *injected_args, *args, **injected_kwargs, **kwargs
+                )
 
         return with_fixtures
 

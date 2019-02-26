@@ -3,8 +3,10 @@ import re
 from functools import wraps
 from typing import (
     Any,
+    AsyncGenerator,
     Awaitable,
     Callable,
+    Generator,
     List,
     Optional,
     TypeVar,
@@ -46,12 +48,21 @@ async def call_async(
     return await async_func(*args, **kwargs)
 
 
-def wrap_async(func: Callable[..., _V]) -> Callable[..., Awaitable[_V]]:
+def wrap_async(func: Callable) -> Callable[..., Awaitable]:
     @wraps(func)
     async def async_func(*args, **kwargs):
         return func(*args, **kwargs)
 
     return async_func
+
+
+def wrap_generator_async(gen: Generator) -> AsyncGenerator:
+    @wraps(gen)
+    async def async_gen(*args, **kwargs):
+        for item in gen(*args, **kwargs):
+            yield item
+
+    return async_gen
 
 
 def camel_to_snake(name: str) -> str:
@@ -78,3 +89,11 @@ def empty_wsgi_app() -> WSGIApp:
         return [body]
 
     return wsgi
+
+
+# AsyncExitStack
+
+try:
+    from contextlib import AsyncExitStack  # pylint: disable=unused-import
+except ImportError:
+    from _async_exit_stack import AsyncExitStack
