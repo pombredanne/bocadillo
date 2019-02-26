@@ -4,10 +4,11 @@ from importlib import import_module
 from typing import Any, Awaitable, Dict, List, Callable, Tuple, Optional, Union
 from inspect import signature, Parameter, iscoroutinefunction
 
-from .compat import call_async, wrap_async
+from .compat import wrap_async
 
 CoroutineFunction = Callable[..., Awaitable]
 SCOPE_SESSION = "session"
+SCOPE_APP = "app"
 
 
 class FixtureDeclarationError(Exception):
@@ -52,7 +53,10 @@ class Fixture:
     @classmethod
     def create(cls, func, **kwargs) -> "Fixture":
         """Factory method to build fixtures of the appropriate scope."""
-        return cls(func, **kwargs)
+        scope: Optional[str] = kwargs.get("scope")
+        if scope == SCOPE_APP:
+            return AppFixture(func, **kwargs)
+        return Fixture(func, **kwargs)
 
     def __repr__(self) -> str:
         return (
@@ -60,7 +64,22 @@ class Fixture:
         )
 
     def __call__(self) -> Awaitable:
+        # NOTE: the returned value is an awaitable, so we *must not*
+        # declare this function as `async` — its return value already is.
         return self.func()
+
+
+class AppFixture(Fixture):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._instance: Any = None
+
+    async def __call__(self) -> Any:
+        # NOTE: the returned value is *not* an awaitable, so
+        # this function *must* be declared `async` in order to be awaitable.
+        if self._instance is None:
+            self._instance = await self.func()
+        return self._instance
 
 
 class Store:
