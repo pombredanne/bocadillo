@@ -46,7 +46,6 @@ class Fixture:
         self.name = name
         self.scope = scope
         self.lazy = lazy
-        self._instance = None
 
         update_wrapper(self, self.func)
 
