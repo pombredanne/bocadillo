@@ -156,7 +156,7 @@ class Store:
     def fixture(
         self,
         func: Callable = None,
-        scope: str = "session",
+        scope: str = SCOPE_SESSION,
         name: str = None,
         lazy: bool = False,
     ) -> Fixture:
