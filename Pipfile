@@ -10,6 +10,7 @@ parse = "*"
 whitenoise = "*"
 requests = "*"
 websockets = "*"
+bocadillo = {editable = true,extras = ["files"],path = "."}
 
 [dev-packages]
 pytest = "*"
@@ -19,7 +20,6 @@ bumpversion = "*"
 pre-commit = "*"
 pydoc-markdown = "*"
 pylint = "*"
-bocadillo = {editable = true,extras = ["files"],path = "."}
 mypy = "*"
 
 [requires]

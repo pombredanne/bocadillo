@@ -14,6 +14,7 @@ from typing import (
     cast,
 )
 
+from async_exit_stack import AsyncExitStack  # pylint: disable=unused-import
 from starlette.concurrency import run_in_threadpool
 
 _CAMEL_REGEX = re.compile(r"(.)([A-Z][a-z]+)")
@@ -89,11 +90,3 @@ def empty_wsgi_app() -> WSGIApp:
         return [body]
 
     return wsgi
-
-
-# AsyncExitStack
-
-try:
-    from contextlib import AsyncExitStack  # pylint: disable=unused-import
-except ImportError:
-    from ._async_exit_stack import AsyncExitStack
