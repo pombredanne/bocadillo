@@ -96,4 +96,4 @@ def empty_wsgi_app() -> WSGIApp:
 try:
     from contextlib import AsyncExitStack  # pylint: disable=unused-import
 except ImportError:
-    from _async_exit_stack import AsyncExitStack
+    from ._async_exit_stack import AsyncExitStack
