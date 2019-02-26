@@ -55,9 +55,16 @@ class Fixture:
             )
 
         if inspect.isgeneratorfunction(func):
+            print("generator")
             func = wrap_generator_async(func)
+        elif inspect.isasyncgenfunction(func):
+            pass
         elif not inspect.iscoroutinefunction(func):
             func = wrap_async(func)
+
+        assert inspect.iscoroutinefunction(func) or inspect.isasyncgenfunction(
+            func
+        )
 
         self.func: Union[AsyncGenerator, CoroutineFunction] = func
         self.name = name
@@ -226,6 +233,8 @@ class Store:
         if not inspect.iscoroutinefunction(func):
             func = wrap_async(func)
 
+        assert inspect.iscoroutinefunction(func)
+
         args_fixtures, kwargs_fixtures = self._resolve_fixtures(func)
 
         if not args_fixtures and not kwargs_fixtures:
@@ -235,14 +244,18 @@ class Store:
         async def with_fixtures(*args, **kwargs):
             # Evaluate the fixtures when the function is actually called.
             async with AsyncExitStack() as stack:
+
+                async def _instanciate(fixt):
+                    return fixt(stack) if fixt.lazy else await fixt(stack)
+
                 injected_args = [
-                    fixt(stack) if fixt.lazy else await fixt(stack)
-                    for _, fixt in args_fixtures
+                    await _instanciate(fixt) for _, fixt in args_fixtures
                 ]
                 injected_kwargs = {
-                    name: (fixt() if fixt.lazy else await fixt())
+                    name: await _instanciate(fixt)
                     for name, fixt in kwargs_fixtures.items()
                 }
+
                 # NOTE: injected args must be given first by convention.
                 # The order for kwargs should not matter.
                 return await func(
