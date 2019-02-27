@@ -16,7 +16,7 @@ async def test_sync_session_yield_fixture(store: Store):
         yield "resource"
         teardown = True
 
-    @store.resolve_function
+    @store.resolve
     def consumer(resource: str):
         return resource.upper()
 
@@ -36,7 +36,7 @@ async def test_async_session_yield_fixture(store: Store):
         yield "resource"
         teardown = True
 
-    @store.resolve_function
+    @store.resolve
     def consumer(resource: str):
         return resource.upper()
 

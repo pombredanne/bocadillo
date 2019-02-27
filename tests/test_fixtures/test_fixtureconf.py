@@ -27,6 +27,4 @@ async def test_if_fixtureconf_then_fixtures_are_loaded(store: Store):
     store.discover_default()
     assert store
     assert "example" in store
-    assert (
-        await store.resolve_function(lambda example: 2 * example)() == "foofoo"
-    )
+    assert await store.resolve(lambda example: 2 * example)() == "foofoo"

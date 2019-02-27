@@ -220,7 +220,7 @@ class Store:
 
         return args_fixtures, kwargs_fixtures
 
-    def resolve_function(
+    def resolve(
         self, func: Union[Callable, CoroutineFunction]
     ) -> CoroutineFunction:
         if not inspect.iscoroutinefunction(func):
@@ -260,7 +260,7 @@ class Store:
     def freeze(self):
         """Resolve fixtures used by each fixture."""
         for fixt in self.fixtures.values():
-            fixt.func = self.resolve_function(fixt.func)
+            fixt.func = self.resolve(fixt.func)
 
     @contextmanager
     def will_freeze(self):
@@ -287,8 +287,8 @@ class BaseResolver:
             store = _STORE
         self.store = store
 
-    def resolve_function(self, func: Callable) -> Callable:
-        return self.store.resolve_function(func)
+    def resolve(self, func: Callable) -> Callable:
+        return self.store.resolve(func)
 
     # TODO: resolve_coroutine_function
 

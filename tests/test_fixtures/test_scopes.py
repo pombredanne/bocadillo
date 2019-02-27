@@ -17,7 +17,7 @@ async def test_session_fixture_is_recomputed_every_time(store: Store):
     def items():
         return []
 
-    @store.resolve_function
+    @store.resolve
     def add(items, value):
         items.append(value)
         return items
@@ -32,7 +32,7 @@ async def test_scope_fixture_is_computed_once_and_reused(store: Store):
     def items():
         return []
 
-    @store.resolve_function
+    @store.resolve
     def add(items, value):
         items.append(value)
         return items

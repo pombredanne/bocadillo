@@ -17,7 +17,7 @@ async def test_fixture_uses_fixture(store: Store):
         def b(a):
             return a * 2
 
-    func = store.resolve_function(lambda b: 2 * b)
+    func = store.resolve(lambda b: 2 * b)
     assert await func() == "aaaa"
 
 
@@ -32,7 +32,7 @@ async def test_fixture_uses_fixture_declared_later(store: Store):
         def a():
             return "a"
 
-    func = store.resolve_function(lambda b: 2 * b)
+    func = store.resolve(lambda b: 2 * b)
     assert await func() == "aaaa"
 
 
