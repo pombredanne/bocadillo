@@ -277,26 +277,3 @@ class Store:
 _STORE = Store()
 fixture = _STORE.fixture  # pylint: disable=invalid-name
 discover_fixtures = _STORE.discover_fixtures  # pylint: disable=invalid-name
-
-
-class BaseResolver:
-    """Resolver for functions."""
-
-    def __init__(self, store: Store = None):
-        if store is None:
-            store = _STORE
-        self.store = store
-
-    def resolve(self, func: Callable) -> Callable:
-        return self.store.resolve(func)
-
-    # TODO: resolve_coroutine_function
-
-
-class Resolver(BaseResolver):
-    """Resolver for framework-level objects."""
-
-    # TODO
-
-
-# TODO: utility to bootstrap fixtures on an app
