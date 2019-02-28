@@ -182,8 +182,7 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         if enable_gzip:
             self.add_asgi_middleware(GZipMiddleware, minimum_size=gzip_min_size)
 
-        # Setup req and res ingredients, which views can declare as parameters
-        # to access the current request and response objects.
+        # Setup request-time ingredients.
 
         self._response: Optional[Response] = None
         self._request: Optional[Request] = None
@@ -392,6 +391,8 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         # Re-raise the exception to allow the server to log the error
         # and for the test client to optionally re-raise it too.
         self.server_error_middleware.raise_if_exception()
+
+        self._request = self._response = None
 
     async def dispatch_websocket(
         self, receive: Receive, send: Send, scope: Scope
