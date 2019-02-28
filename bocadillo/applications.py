@@ -41,6 +41,7 @@ from .errors import HTTPError, HTTPErrorMiddleware, ServerErrorMiddleware
 from .media import UnsupportedMediaType, get_default_handlers
 from .meta import DocsMeta
 from .middleware import ASGIMiddleware
+from .ingredients import ingredient
 from .request import Request
 from .response import Response
 from .routing import RoutingMixin
@@ -180,6 +181,20 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
             self.add_asgi_middleware(HTTPSRedirectMiddleware)
         if enable_gzip:
             self.add_asgi_middleware(GZipMiddleware, minimum_size=gzip_min_size)
+
+        # Setup req and res ingredients, which views can declare as parameters
+        # to access the current request and response objects.
+
+        self._response: Optional[Response] = None
+        self._request: Optional[Request] = None
+
+        @ingredient
+        def req():
+            return self._request
+
+        @ingredient
+        def res():
+            return self._response
 
     @property
     def debug(self) -> bool:
@@ -364,6 +379,12 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
             media_type=self.media_type,
             media_handler=self.media_handlers[self.media_type],
         )
+
+        # NOTE: make the request and response available to the `req` and `res`
+        # ingredients.
+        self._request = req
+        self._response = res
+
         res: Response = await self.server_error_middleware(req, res)
 
         await res(receive, send)
