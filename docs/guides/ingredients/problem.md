@@ -1,6 +1,6 @@
 # Problem statement
 
-Before we discuss how to use fixtures, let's see what kind of problem they were made to solve exactly.
+Before we discuss how to use ingredients, let's see what kind of problem they were made to solve exactly.
 
 ## Example: caching powered by Redis
 
@@ -8,7 +8,7 @@ Suppose we're implementing a caching system backed by [Redis](https://redis.io),
 
 The application would connect to the Redis instance on startup, disconnect on shutdown (see [event handlers](../agnostic/events.md)), and views could use the connection object to cache items to Redis.
 
-## Without fixtures
+## Without ingredients
 
 Let's see how this would look like:
 
@@ -82,20 +82,20 @@ But this approach wouldn't work in practice, because now we cannot reference the
 
 Also, consider this: what if the routes were declared in a separate [recipe](../agnostic/recipes.md)? How could we make sure they use the same cache? This would be even more problematic if the cache was in-memory — we wouldn't want to have the recipe and the app reference different copies of the cache!
 
-## With fixtures
+## With ingredients
 
-As you surely begin to feel, _there must be a better way_… And surely enough, there is: [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection), of which fixtures are an implementation.
+As you surely begin to feel, _there must be a better way_… And surely enough, there is: [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection), of which ingredients are an implementation.
 
-As a teaser, here's how fixtures can allow us to implement beautiful, testable code for providing a Redis instance to our application:
+As a teaser, here's how ingredients can allow us to implement beautiful, testable code for providing a Redis instance to our application:
 
-1. Define a `redis` fixture in `fixtureconf.py`:
+1. Define a `redis` ingredient in `providerconf.py`:
 
 ```python
-# fixtureconf.py
+# providerconf.py
 import aioredis
-from bocadillo import fixture
+from bocadillo import ingredient
 
-@fixture(scope="app")
+@ingredient(scope="app")
 async def redis():
     redis = await aioredis.create_redis("redis://localhost")
     yield redis
@@ -123,6 +123,6 @@ if __name__ == "__main__":
     app.run()
 ```
 
-That's it! As you can see, fixtures allow views to **receive and use objects without having to care about import, setup nor cleanup**.
+That's it! As you can see, ingredients allow views to **receive and use objects without having to care about import, setup nor cleanup**.
 
-Let's now see what features fixtures offer and how to use them.
+Let's now see what features ingredients offer and how to use them.

@@ -1,30 +1,30 @@
-# Factory fixtures
+# Factory ingredients
 
-Sometimes you want a fixture to be generic so that it can be used for a variety of inputs.
+Sometimes you want a ingredient to be generic so that it can be used for a variety of inputs.
 
-**Factory fixtures** allow to do that: instead of having the fixture function return a _value_, it returns a _function_.
+**Factory ingredients** allow to do that: instead of having the ingredient function return a _value_, it returns a _function_.
 
 ::: tip NOTE
-Factory fixture is just a _pattern_. There's no magic performed behing the scenes: it's just a fixture that provides a callable.
+Factory ingredient is just a _pattern_. There's no magic performed behing the scenes: it's just a ingredient that provides a callable.
 :::
 
 ## Example: parametrized database query
 
-A good candidate for a factory fixture would be a parametrized database query. For example, let's build a factory fixture that retrieves an item from the database given its primary key.
+A good candidate for a factory ingredient would be a parametrized database query. For example, let's build a factory ingredient that retrieves an item from the database given its primary key.
 
 The following example simulates that with a hardcoded, in-memory database of sticky notes:
 
 ```python
-from bocadillo import App, fixture
+from bocadillo import App, ingredient
 
-@fixture(scope="app")
+@ingredient(scope="app")
 def notes():
     return [
         {"id": 1, "text": "Groceries"},
         {"id": 2, "text": "Make potatoe smash"},
     ]
 
-@fixture
+@ingredient
 def get_note(notes):
     async def _get_note(pk: int) -> list:
         try:
@@ -46,13 +46,13 @@ async def retrieve_note(req, res, pk: int, get_note):
 
 This example allows views to create and access temporary files.
 
-The factory fixture pattern is combined with [fixture cleanup](#cleaning-up-fixtures) so that temporary files are removed once the fixture goes out of scope:
+The factory ingredient pattern is combined with [ingredient cleanup](#cleaning-up-ingredients) so that temporary files are removed once the ingredient goes out of scope:
 
 ```python
 import os
-from bocadillo import fixture
+from bocadillo import ingredient
 
-@fixture
+@ingredient
 def tmpfile():
     files = set()
 
@@ -69,16 +69,16 @@ def tmpfile():
 
 ## Shortcut syntax
 
-If your factory fixture only defines and returns a function, you can pass `factory=True` to save a bit of boilerplate.
+If your factory ingredient only defines and returns a function, you can pass `factory=True` to save a bit of boilerplate.
 
-If the fixture needs to access other fixtures, they should be declared first in the factory fixture's signature and separated with a `*` from the other parameters. They won't be expected by the constructed fixture.
+If the ingredient needs to access other ingredients, they should be declared first in the factory ingredient's signature and separated with a `*` from the other parameters. They won't be expected by the constructed ingredient.
 
 To make things clearer, the following example is exactly equivalent to the one above:
 
 ```python
-from bocadillo import App, fixture
+from bocadillo import App, ingredient
 
-@fixture(factory=True)
+@ingredient(factory=True)
 async def get_note(notes, *, pk: int) -> list:
     try:
         return next(note for note in notes if note["id"] == pk)
