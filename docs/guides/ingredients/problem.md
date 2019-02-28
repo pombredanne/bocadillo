@@ -2,6 +2,10 @@
 
 Before we discuss how to use ingredients, let's see what kind of problem they were made to solve exactly.
 
+::: tip TL;DR:
+Ingredients help you **decouple resources from their consumers**. Using ingredients typically results in an application being much **easier to test, change and maintain**. No big deal!
+:::
+
 ## Example: caching powered by Redis
 
 Suppose we're implementing a caching system backed by [Redis](https://redis.io), a key-value store, using the [aioredis](https://github.com/aio-libs/aioredis) library.
