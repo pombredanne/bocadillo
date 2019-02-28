@@ -1,8 +1,0 @@
-[MESSAGE CONTROL]
-
-disable=
-    missing-docstring,
-    bad-continuation,
-    too-few-public-methods,
-    too-few-ancestors,
-    too-many-ancestors

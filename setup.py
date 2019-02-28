@@ -29,7 +29,6 @@ setuptools.setup(
         "requests",
         "parse",
         "python-multipart",
-        "async_exit_stack==1.0.1",
         "websockets>=6.0",
     ],
     extras_require={"files": ["aiofiles"]},

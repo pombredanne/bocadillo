@@ -1,12 +1,9 @@
 import asyncio
 import re
-from functools import wraps
 from typing import (
     Any,
-    AsyncGenerator,
     Awaitable,
     Callable,
-    Generator,
     List,
     Optional,
     TypeVar,
@@ -14,7 +11,6 @@ from typing import (
     cast,
 )
 
-from async_exit_stack import AsyncExitStack  # pylint: disable=unused-import
 from starlette.concurrency import run_in_threadpool
 
 _CAMEL_REGEX = re.compile(r"(.)([A-Z][a-z]+)")
@@ -47,23 +43,6 @@ async def call_async(
 
     async_func = cast(Callable[..., Awaitable[_V]], func)
     return await async_func(*args, **kwargs)
-
-
-def wrap_async(func: Callable) -> Callable[..., Awaitable]:
-    @wraps(func)
-    async def async_func(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return async_func
-
-
-def wrap_generator_async(gen: Generator) -> AsyncGenerator:
-    @wraps(gen)
-    async def async_gen(*args, **kwargs):
-        for item in gen(*args, **kwargs):
-            yield item
-
-    return async_gen
 
 
 def camel_to_snake(name: str) -> str:
