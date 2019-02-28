@@ -11,13 +11,15 @@ This feature was heavily inspired by [pytest fixtures](https://docs.pytest.org/e
 ::: tip NOTE
 The implementation of ingredients in Bocadillo is provided by [aiodine](https://github.com/bocadilloproject/aiodine), an async dependency injection library.
 
-We chose to release aiodine separately from Bocadillo to allow its reuse in other projects. But keep in mind that Bocadillo ingredients are merely a thin layer on top of aiodine's providers.
+We chose to release aiodine separately from Bocadillo to allow its reuse in other projects. But keep in mind that **Bocadillo ingredients are merely a thin layer on top of aiodine's providers**.
 
-To make things clear, here's the terminology mapping between Bocadillo and aiodine:
+To make things clear, here is the terminology correspondance between Bocadillo and aiodine:
 
-| aiodine  | Bocadillo  |
-| -------- | ---------- |
-| Provider | Ingredient |
-| Consumer | View       |
+| aiodine          | Bocadillo       |
+| ---------------- | --------------- |
+| Provider         | Ingredient      |
+| Consumer         | View            |
+| `session` scope  | `app` scope     |
+| `function` scope | `session` scope |
 
 :::
