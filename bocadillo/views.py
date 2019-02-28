@@ -5,6 +5,7 @@ from typing import Any, cast, Dict, List, Optional, Type, Union
 from .app_types import AsyncHandler, Handler
 from .compat import call_async, camel_to_snake
 from .constants import ALL_HTTP_METHODS
+from . import ingredients
 
 MethodsParam = Union[List[str], all]  # type: ignore
 
@@ -87,6 +88,7 @@ class View:
         vue: View = cls(name, doc=docstring)
 
         for method, handler in async_handlers.items():
+            handler = ingredients.consumer(handler)
             setattr(vue, method, handler)
 
         return vue
