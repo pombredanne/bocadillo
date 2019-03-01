@@ -45,7 +45,7 @@ from .ingredients import ingredient, freeze as freeze_ingredients
 from .request import Request
 from .response import Response
 from .routing import RoutingMixin
-from .staticfiles import static
+from .staticfiles import static, WhiteNoise
 from .templates import TemplatesMixin
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -76,6 +76,9 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
     static_root (str):
         The path prefix for static assets.
         Defaults to `"static"`.
+    static_config (dict):
+        Extra static files configuration attributes.
+        See also [static](./staticfiles.md#static).
     allowed_hosts (list of str, optional):
         A list of hosts which the server is allowed to run at.
         If the list contains `"*"`, any host is allowed.
@@ -119,6 +122,7 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         *,
         static_dir: Optional[str] = "static",
         static_root: Optional[str] = "static",
+        static_config: dict = None,
         allowed_hosts: List[str] = None,
         enable_cors: bool = False,
         cors_config: dict = None,
@@ -141,6 +145,7 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         # Mounted (children) apps
         self._prefix_to_app: Dict[str, Any] = {}
         self._name_to_prefix_and_app: Dict[str, Tuple[str, App]] = {}
+        self._static_apps: Dict[str, WhiteNoise] = {}
 
         # Test client
         self.client = self.build_client()
@@ -149,7 +154,7 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         if static_dir is not None:
             if static_root is None:
                 static_root = static_dir
-            self.mount(static_root, static(static_dir))
+            self.mount(static_root, static(static_dir, **(static_config or {})))
 
         # Media
         self.media_handlers = get_default_handlers()
@@ -270,6 +275,9 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
 
         if isinstance(app, App) and app.name is not None:
             self._name_to_prefix_and_app[app.name] = (prefix, app)
+
+        if isinstance(app, WhiteNoise):
+            self._static_apps[prefix] = app
 
     def recipe(self, recipe: "Recipe"):
         """Apply a recipe.
@@ -468,7 +476,10 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         - [Uvicorn settings](https://www.uvicorn.org/settings/) for all
         available keyword arguments.
         """
+        live_server = False
+
         if _run is None:  # pragma: no cover
+            live_server = True
             _run = run
 
         if "PORT" in os.environ:
@@ -482,9 +493,18 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         if port is None:
             port = 8000
 
-        if debug:
-            self.debug = True
-            reloader = StatReload(get_logger(log_level))
+        if not debug:
+            _run(self, host=host, port=port, **kwargs)
+            return
+
+        self.debug = True
+
+        # Reload static files in development.
+        # See: http://whitenoise.evans.io/en/stable/base.html#autorefresh
+        for whitenoise in self._static_apps.values():
+            whitenoise.autorefresh = True
+
+        if live_server:
             kwargs = {
                 "app": self,
                 "host": host,
@@ -493,7 +513,8 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
                 "debug": self.debug,
                 **kwargs,
             }
-            reloader.run(run, kwargs)
+            reloader = StatReload(get_logger(log_level))
+            reloader.run(_run, kwargs)
         else:
             _run(self, host=host, port=port, **kwargs)
 
