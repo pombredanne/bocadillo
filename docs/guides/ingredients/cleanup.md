@@ -8,7 +8,7 @@ Such ingredients are called **yield ingredients**.
 
 ## Example: providing a writable file
 
-As an example, here's a ingredient that provides a log file:
+As an example, here's an ingredient that provides a log file:
 
 ```python
 from datetime import datetime

@@ -1,8 +1,8 @@
 # Ingredient basics
 
-## Registering a ingredient
+## Registering an ingredient
 
-Registering a ingredient can be done by decorating a function with the `@bocadillo.ingredient` decorator.
+Registering an ingredient can be done by decorating a function with the `@bocadillo.ingredient` decorator.
 
 Here's a simple hello world ingredient:
 
@@ -14,7 +14,7 @@ def hello() -> str:
     return "Hello, ingredients!"
 ```
 
-## Using a ingredient
+## Using an ingredient
 
 Once the ingredient has been defined, it can be used in views by declaring it as a parameter.
 

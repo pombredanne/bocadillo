@@ -26,7 +26,7 @@ async def index(req, res, message_caps):
 
 ## Example: reusable aiohttp session
 
-As a more elaborate example, let's build a ingredient `aiohttp` client session and use that in another ingredient that needs to perform an HTTP call:
+As a more elaborate example, let's build an ingredient `aiohttp` client session and use that in another ingredient that needs to perform an HTTP call:
 
 ```python
 import aiohttp

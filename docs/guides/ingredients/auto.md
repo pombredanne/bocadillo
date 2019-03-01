@@ -1,6 +1,6 @@
 # Auto-used ingredients
 
-Sometimes, you may want a ingredient to be provisioned without having to explicitly declare it as a parameter in your views.
+Sometimes, you may want an ingredient to be provisioned without having to explicitly declare it as a parameter in your views.
 
 In that case, you can pass `autouse=True` to the ingredient, and it will be automatically activated (within its configured scope).
 

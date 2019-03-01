@@ -1,11 +1,11 @@
 # Factory ingredients
 
-Sometimes you want a ingredient to be generic so that it can be used for a variety of inputs.
+Sometimes you want an ingredient to be generic so that it can be used for a variety of inputs.
 
 **Factory ingredients** allow to do that: instead of having the ingredient function return a _value_, it returns a _function_.
 
 ::: tip NOTE
-Factory ingredient is just a _pattern_. There's no magic performed behing the scenes: it's just a ingredient that provides a callable.
+Factory ingredient is just a _pattern_. There's no magic performed behing the scenes: it's just an ingredient that provides a callable.
 :::
 
 ## Example: parametrized database query

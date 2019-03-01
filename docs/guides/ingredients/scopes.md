@@ -1,6 +1,6 @@
 ## Scopes
 
-By default, a ingredient is recomputed on every call to the view. This is convenient when you want to provide pre-computed values, e.g. common database queries or objects that are derived from the user, and those values are relatively cheap to compute.
+By default, an ingredient is recomputed on every call to the view. This is convenient when you want to provide pre-computed values, e.g. common database queries or objects that are derived from the user, and those values are relatively cheap to compute.
 
 However, some ingredients are typically expansive to setup and teardown, and could gain from being reused accross sessions. This is the case of ingredients that access the network, such as an SMTP client or, as in the [problem statement](#problem-statement), a Redis connection.
 
@@ -11,7 +11,7 @@ For this reason, Bocadillo ingredients come with two possible **scopes**:
 
 ### Example: keeping track of WebSocket clients
 
-For example, let's build a ingredient for a set of clients (initially empty) which a WebSocket view can use to keep track of connected clients:
+For example, let's build an ingredient for a set of clients (initially empty) which a WebSocket view can use to keep track of connected clients:
 
 ```python
 from bocadillo import App, ingredient
