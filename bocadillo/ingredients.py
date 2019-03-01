@@ -6,3 +6,6 @@ _STORE = Store(
 )
 ingredient = _STORE.provider
 consumer = _STORE.consumer
+freeze = _STORE.freeze
+exit_freeze = _STORE.exit_freeze
+discover_ingredients = _STORE.discover

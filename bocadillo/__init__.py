@@ -1,5 +1,6 @@
 from .applications import API, App
 from .errors import HTTPError
+from .ingredients import ingredient, discover_ingredients
 from .middleware import ASGIMiddleware, Middleware
 from .recipes import Recipe
 from .response import Response
