@@ -18,10 +18,10 @@
     "default": {
         "aiodine": {
             "hashes": [
-                "sha256:5bf7cfa502d26085220c697ce9366aa9ea6d9960368f33a53b5bd4e1e8058553",
-                "sha256:9b9cda5598dbb9ad476010460d751beb548ce63e72cde626d02b2cca585b54d1"
+                "sha256:1b4ceff63341536eaaa933626866e7a856e7a465fc3f415b9cd62b1601e2b260",
+                "sha256:dda1d99bd34438cdef7a958f413fca795b1e26f159f39ce3b16c07088b787cc7"
             ],
-            "version": "==0.1.2"
+            "version": "==0.1.3"
         },
         "aiofiles": {
             "hashes": [
@@ -576,10 +576,10 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:5a3ecdfbde67a4a3b3111301c4d64a5b71cf862c8c42958d30cf3253df1f29dd",
-                "sha256:dffd40d19ab0168c02cf936de59590a3c0f2c8c4a36f363fcf3dae18728dc94e"
+                "sha256:6aebaf4dd2568a0094225ebbca987859e369e3e5c22dc7d52e5406d504890417",
+                "sha256:984d7e607b0a5d1329425dd8845bd971b957424b5ba664729fab51ab8c11bc39"
             ],
-            "version": "==16.4.1"
+            "version": "==16.4.3"
         },
         "wrapt": {
             "hashes": [
