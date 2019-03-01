@@ -1,5 +1,9 @@
 # Introduction to Ingredients
 
+::: warning EXPERIMENTAL
+The ingredients API is experimental and may be subject to subtle changes. If you encounter any bug, please [file an issue on the aiodine repo](https://github.com/bocadilloproject/aiodine/issues/new). 👍
+:::
+
 In a Bocadillo application, views typically need to access _resources_ or _services_ to fulfill a client's request. For example, they may need to query a database, or interact with a disk-based cache.
 
 Yet, views shouldn't have to care about _how_ those resources are assembled, provided, nor cleaned up.
