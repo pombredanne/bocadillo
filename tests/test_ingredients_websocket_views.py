@@ -1,7 +1,6 @@
 import pytest
 
 from bocadillo import App, ingredient, WebSocket
-from bocadillo.ingredients import freeze
 
 
 @pytest.fixture(autouse=True)
@@ -9,8 +8,6 @@ def clients_ingredient():
     @ingredient(scope="app")
     async def clients():
         return set()
-
-    freeze()
 
 
 def test_websocket_clients_example(app: App):

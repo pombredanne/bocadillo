@@ -41,7 +41,7 @@ from .errors import HTTPError, HTTPErrorMiddleware, ServerErrorMiddleware
 from .media import UnsupportedMediaType, get_default_handlers
 from .meta import DocsMeta
 from .middleware import ASGIMiddleware
-from .ingredients import ingredient
+from .ingredients import ingredient, freeze as freeze_ingredients
 from .request import Request
 from .response import Response
 from .routing import RoutingMixin
@@ -194,6 +194,8 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         @ingredient
         def res():
             return self._response
+
+        self.__ingredients_frozen = False
 
     @property
     def debug(self) -> bool:
@@ -400,8 +402,13 @@ class App(TemplatesMixin, RoutingMixin, metaclass=DocsMeta):
         await self.websocket_router(scope, receive, send)
 
     def dispatch(self, scope: Scope) -> ASGIAppInstance:
+        if not self.__ingredients_frozen:
+            freeze_ingredients()
+            self.__ingredients_frozen = True
+
         if scope["type"] == "websocket":
             return partial(self.dispatch_websocket, scope=scope)
+
         assert scope["type"] == "http"
         return partial(self.dispatch_http, scope=scope)
 

@@ -1,7 +1,6 @@
 import pytest
 
 from bocadillo import App, ingredient
-from bocadillo.ingredients import freeze
 
 
 @pytest.fixture(autouse=True)
@@ -13,8 +12,6 @@ async def hello_ingredient():
     @ingredient
     async def hello(hello_format) -> str:
         return hello_format.format(who="ingredients")
-
-    freeze()
 
 
 def test_function_based_view(app: App):
