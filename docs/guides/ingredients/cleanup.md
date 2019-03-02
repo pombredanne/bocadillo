@@ -1,6 +1,9 @@
 # Cleaning up ingredients
 
-Some ingredients need to perform cleanup operations when they go out of scope. For example, an app-scoped database ingredient may need to close the open connections when the app shuts down, or a session-scoped file ingredient may need to close descriptors when the request has been processed.
+Some ingredients need to perform cleanup operations when they go out of scope. For example:
+
+- a request-scoped file ingredient may need to close descriptors when the request has been processed.
+- an app-scoped database ingredient may need to close the open connections when the app shuts down.
 
 To support this, Bocadillo ingredients support using a `yield` statement instead of `return`. The yielded value will be injected in the view, and all the code after the `yield` statement will be executed when cleaning up the ingredient.
 

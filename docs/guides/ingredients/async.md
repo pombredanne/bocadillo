@@ -56,5 +56,5 @@ async def data(req, res, random_json: Awaitable[dict]):
 ```
 
 ::: warning CAVEAT
-Lazy ingredients can only be **session-scoped**. If it could be app-scoped and shared accross sessions, Bocadillo would have no way to know whether it has already been awaited in another session.
+Lazy ingredients can only be **request-scoped**. If it could be app-scoped, Bocadillo would have no way to know whether it has already been awaited when handling another connection.
 :::
