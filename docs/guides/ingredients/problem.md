@@ -92,10 +92,10 @@ As you surely begin to feel, _there must be a better way_… And surely enough, 
 
 As a teaser, here's how ingredients can allow us to implement beautiful, testable code for providing a Redis instance to our application:
 
-1. Define a `redis` ingredient in `providerconf.py`:
+1. Define a `redis` ingredient in `ingredientconf.py`:
 
 ```python
-# providerconf.py
+# ingredientconf.py
 import aioredis
 from bocadillo import ingredient
 

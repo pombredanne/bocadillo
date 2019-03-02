@@ -93,10 +93,10 @@ def example_note() -> Note:
 from notes import Note  # => `example_note` discovered
 ```
 
-3. Functions decorated with `@ingredient` that live in the `providerconf.py` module relative to the application script.
+3. Functions decorated with `@ingredient` that live in an `ingredientconf.py` module relative to the application script.
 
 ```python
-# providerconf.py
+# ingredientconf.py
 import random as _random
 from bocadillo import ingredient
 
