@@ -24,6 +24,23 @@ As a result, we strongly recommend you read this document carefully before upgra
 
 - HTTP middleware classes can now expect both the `inner` middleware _and_ the `app` instance to be passed as positional arguments, instead of only `inner`. This allows to perform initialisation on the `app` in the middleware's `__init__()` method.
 
+## [v0.12.4] - 2019-03-05
+
+### Added
+
+- Add support for uvicorn 0.5.x.
+- Activate debug mode via the `BOCADILLO_DEBUG` environment variable.
+
+### Fixed
+
+- When launching the application script in debug mode, hot reload was activated but it did not actually reload the application in case of changes. This has been fixed. Caveat: the application should be declared as `app` in the application script, but this can be overridden via the `declared_as` parameter to `App.run`.
+
+## [v0.12.3] - 2019-03-04
+
+### Fixed
+
+- Hot fix: pin Uvicorn to <0.5 while we investigate compatibility with 0.5+.
+
 ## [v0.12.2] - 2019-03-01
 
 ### Added
@@ -468,7 +485,9 @@ async def foo(req, res):
 - `README.md`.
 - `CONTRIBUTING.md`.
 
-[unreleased]: https://github.com/bocadilloproject/bocadillo/compare/v0.12.2...HEAD
+[unreleased]: https://github.com/bocadilloproject/bocadillo/compare/v0.12.4...HEAD
+[v0.12.4]: https://github.com/bocadilloproject/bocadillo/compare/v0.12.3...v0.12.4
+[v0.12.3]: https://github.com/bocadilloproject/bocadillo/compare/v0.12.2...v0.12.3
 [v0.12.2]: https://github.com/bocadilloproject/bocadillo/compare/v0.12.1...v0.12.2
 [v0.12.1]: https://github.com/bocadilloproject/bocadillo/compare/v0.12.0...v0.12.1
 [v0.12.0]: https://github.com/bocadilloproject/bocadillo/compare/v0.11.2...v0.12.0
