@@ -16,9 +16,11 @@ def hello() -> str:
 
 ## Using an ingredient
 
-Once the ingredient has been defined, it can be used in views by declaring it as a parameter.
+### As a view parameter
 
-HTTP example:
+Once the ingredient has been defined, it can be used in views by declaring it as a parameter of the view function.
+
+- HTTP example:
 
 ```python
 @app.route("/hi")
@@ -26,7 +28,7 @@ async def say_hi(req, res, hello: str):
     res.text = hello
 ```
 
-HTTP example (class-based):
+- HTTP example (class-based):
 
 ```python
 @app.route("/hi")
@@ -35,7 +37,7 @@ class SayHi:
         res.text = hello
 ```
 
-WebSocket example:
+- WebSocket example:
 
 ```python
 @app.websocket_route("/hi")
@@ -46,6 +48,30 @@ async def say_hi(ws, hello: str):
 
 ::: tip NOTE
 The examples above use an `str` type annotation for the `hello` parameter. This has nothing to do with ingredients, and isn't used to determine which ingredients need to be injected. Only the name of the parameter matters.
+:::
+
+### As a decorator
+
+Alternatively, you can decorate a view with the `@useingredient` decorator. This is useful when you don't need to use the value returned by the ingredient.
+
+```python
+from bocadillo import ingredient, useingredient
+
+@ingredient
+def hello():
+    print("Hello, ingredients!")
+
+@app.route("/hi")
+@useingredient("hello")
+async def say_hi(req, res):
+    res.text = "A hello message was printed to the console."
+```
+
+::: tip
+
+- The `@useingredient` decorator accepts a variable number of ingredients.
+- Ingredients can be passed by name or by reference.
+
 :::
 
 ## How are ingredients discovered?
