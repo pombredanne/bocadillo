@@ -51,7 +51,7 @@ def test_render_sync_template_in_recipe_route(
     numbers = Recipe("numbers")
 
     @numbers.route("/sync")
-    def get_numbers_sync(req, res):
+    async def get_numbers_sync(req, res):
         with pytest.deprecated_call():
             res.html = numbers.template_sync(
                 template_file.name, **template_file.context
