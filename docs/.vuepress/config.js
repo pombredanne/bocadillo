@@ -166,7 +166,8 @@ module.exports = {
             "static-files",
             "hooks",
             "background-tasks",
-            "middleware"
+            "middleware",
+            "sse"
           ])
         },
         {
@@ -211,7 +212,12 @@ module.exports = {
         {
           title: "How-To",
           collapsable: false,
-          children: listDir("how-to", ["yaml-media", "middleware", "tortoise"])
+          children: listDir("how-to", [
+            "yaml-media",
+            "middleware",
+            "tortoise",
+            "socketio"
+          ])
         }
       ],
       "/discussions/": [
